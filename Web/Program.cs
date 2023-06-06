@@ -1,3 +1,7 @@
+using Grpc.Core;
+using Grpc.Net.Client.Configuration;
+using Grpc.Net.Client;
+using GrpcService;
 using Microsoft.AspNetCore.ResponseCompression;
 using Web.HostedServices;
 using Web.Hubs;
@@ -15,6 +19,11 @@ builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
         new[] { "application/octet-stream" });
+});
+
+builder.Services.AddGrpcClient<PipelineSubscriber.PipelineSubscriberClient>(options =>
+{
+    options.Address = new Uri("https://localhost:7284");
 });
 
 var app = builder.Build();

@@ -9,11 +9,13 @@ namespace Web.HostedServices;
 
 public class SignalRBackgroundService : BackgroundService
 {
+    private readonly PipelineSubscriber.PipelineSubscriberClient _client;
     private readonly IPipelinePublisher _publisher;
     private readonly ILogger<SignalRBackgroundService> _logger;
 
-    public SignalRBackgroundService(IPipelinePublisher publisher, ILogger<SignalRBackgroundService> logger)
+    public SignalRBackgroundService(PipelineSubscriber.PipelineSubscriberClient client, IPipelinePublisher publisher, ILogger<SignalRBackgroundService> logger)
     {
+        _client = client;
         _publisher = publisher;
         _logger = logger;
     }
@@ -23,11 +25,7 @@ public class SignalRBackgroundService : BackgroundService
         // let other services start
         await Task.Yield();
 
-        GrpcChannel channel = CreateChannel();
-
-        var client = new PipelineSubscriber.PipelineSubscriberClient(channel);
-
-        using var stream = client.Subscribe(new Empty(), cancellationToken: cancellationToken);
+        using var stream = _client.Subscribe(new Empty(), cancellationToken: cancellationToken);
 
         try
         {
@@ -46,38 +44,5 @@ public class SignalRBackgroundService : BackgroundService
             Console.WriteLine("Stream cancelled.");
         }
     }
-
-    private static GrpcChannel CreateChannel()
-    {
-        var methodConfig = new MethodConfig
-        {
-            Names = { MethodName.Default },
-            RetryPolicy = new RetryPolicy
-            {
-                MaxAttempts = 5,
-                InitialBackoff = TimeSpan.FromSeconds(1),
-                MaxBackoff = TimeSpan.FromSeconds(5),
-                BackoffMultiplier = 1.5,
-                RetryableStatusCodes = { StatusCode.Unavailable }
-            }
-        };
-
-        var serviceConfig = new ServiceConfig
-        {
-            MethodConfigs = { methodConfig },
-        };
-
-        var channel = GrpcChannel.ForAddress("https://localhost:7284", new GrpcChannelOptions
-        {
-
-            ServiceConfig = serviceConfig,
-            HttpHandler = new SocketsHttpHandler
-            {
-                EnableMultipleHttp2Connections = true,
-            },
-
-        });
-
-        return channel;
-    }
+    
 }
