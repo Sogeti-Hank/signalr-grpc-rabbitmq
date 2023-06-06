@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  rabbitmq:
+    image: rabbitmq:3.11.16-management
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - rabbitmq:/var/lib/rabbitmq/mnesia
+    networks:
+        - demo
+
+volumes:
+  rabbitmq:
+    driver: local
+
+networks:
+  demo:
+    driver: bridge

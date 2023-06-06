@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option csharp_namespace = "GrpcService";
+
+package pipelinesubscriber;
+
+service PipelineSubscriber {
+  rpc Subscribe (google.protobuf.Empty) returns (stream PipelineResponse);
+}
+
+// The response message containing the greetings.
+message PipelineResponse {
+  string projectId = 1;
+  string status = 2;
+}
